@@ -156,7 +156,7 @@ class AnyNet(nn.Module):
 
 
         if self.refine_spn:
-            spn_out = self.refine_spn[0](nn.functional.upsample(left, (img_size[2]//4, img_size[3]//4), mode='bilinear'),align_corners=True)
+            spn_out = self.refine_spn[0](nn.functional.upsample(left, (img_size[2]//4, img_size[3]//4), mode='bilinear', align_corners=True))
             G1, G2, G3 = spn_out[:,:self.spn_init_channels,:,:], spn_out[:,self.spn_init_channels:self.spn_init_channels*2,:,:], spn_out[:,self.spn_init_channels*2:,:,:]
             sum_abs = G1.abs() + G2.abs() + G3.abs()
             G1 = torch.div(G1, sum_abs + 1e-8)
