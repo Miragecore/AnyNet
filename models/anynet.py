@@ -81,8 +81,8 @@ class AnyNet(nn.Module):
         """
         B, C, H, W = x.size()
         # mesh grid
-        xx = torch.arange(0, W, device='cuda').view(1, -1).repeat(H, 1)
-        yy = torch.arange(0, H, device='cuda').view(-1, 1).repeat(1, W)
+        xx = torch.arange(0, W, device='cpu').view(1, -1).repeat(H, 1)
+        yy = torch.arange(0, H, device='cpu').view(-1, 1).repeat(1, W)
         xx = xx.view(1, 1, H, W).repeat(B, 1, 1, 1)
         yy = yy.view(1, 1, H, W).repeat(B, 1, 1, 1)
         vgrid = torch.cat((xx, yy), 1).float()
@@ -101,7 +101,7 @@ class AnyNet(nn.Module):
 
     def _build_volume_2d(self, feat_l, feat_r, maxdisp, stride=1):
         assert maxdisp % stride == 0  # Assume maxdisp is multiple of stride
-        cost = torch.zeros((feat_l.size()[0], maxdisp//stride, feat_l.size()[2], feat_l.size()[3]), device='cuda')
+        cost = torch.zeros((feat_l.size()[0], maxdisp//stride, feat_l.size()[2], feat_l.size()[3]), device='cpu')
         for i in range(0, maxdisp, stride):
             cost[:, i//stride, :, :i] = feat_l[:, :, :, :i].abs().sum(1)
             if i > 0:
@@ -114,7 +114,7 @@ class AnyNet(nn.Module):
     def _build_volume_2d3(self, feat_l, feat_r, maxdisp, disp, stride=1):
         size = feat_l.size()
         batch_disp = disp[:,None,:,:,:].repeat(1, maxdisp*2-1, 1, 1, 1).view(-1,1,size[-2], size[-1])
-        batch_shift = torch.arange(-maxdisp+1, maxdisp, device='cuda').repeat(size[0])[:,None,None,None] * stride
+        batch_shift = torch.arange(-maxdisp+1, maxdisp, device='cpu').repeat(size[0])[:,None,None,None] * stride
         batch_disp = batch_disp - batch_shift.float()
         batch_feat_l = feat_l[:,None,:,:,:].repeat(1,maxdisp*2-1, 1, 1, 1).view(-1,size[-3],size[-2], size[-1])
         batch_feat_r = feat_r[:,None,:,:,:].repeat(1,maxdisp*2-1, 1, 1, 1).view(-1,size[-3],size[-2], size[-1])
@@ -173,7 +173,7 @@ class AnyNet(nn.Module):
 class disparityregression2(nn.Module):
     def __init__(self, start, end, stride=1):
         super(disparityregression2, self).__init__()
-        self.disp = torch.arange(start*stride, end*stride, stride, device='cuda', requires_grad=False).view(1, -1, 1, 1).float()
+        self.disp = torch.arange(start*stride, end*stride, stride, device='cpu', requires_grad=False).view(1, -1, 1, 1).float()
 
     def forward(self, x):
         disp = self.disp.repeat(x.size()[0], 1, x.size()[2], x.size()[3])
